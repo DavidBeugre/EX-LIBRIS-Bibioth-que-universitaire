@@ -1,0 +1,142 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  ADMINISTRATEUR
+  BIBLIOTHECAIRE
+  ADHERENT
+}
+
+enum TypeProfil {
+  ETUDIANT
+  ENSEIGNANT_CHERCHEUR
+  PERSONNEL_ADMINISTRATIF
+}
+
+enum StatutAdherent {
+  ACTIF
+  SUSPENDU
+}
+
+enum StatutExemplaire {
+  DISPONIBLE
+  EMPRUNTE
+  RESERVE
+  PERDU
+  EN_REPARATION
+}
+
+enum StatutReservation {
+  EN_ATTENTE
+  HONOREE
+  ANNULEE
+}
+
+enum StatutPaiement {
+  IMPAYEE
+  PAYEE
+}
+
+model Utilisateur {
+  id             String   @id @default(uuid())
+  nom            String
+  prenom         String
+  email          String   @unique
+  motDePasseHash String
+  role           Role
+  dateCreation   DateTime @default(now())
+
+  adherent Adherent?
+
+  @@map("utilisateurs")
+}
+
+model Adherent {
+  id            String         @id @default(uuid())
+  utilisateurId String         @unique
+  typeProfil    TypeProfil
+  quotaEmprunt  Int            @default(3)
+  dureeJours    Int            @default(21)
+  statut        StatutAdherent @default(ACTIF)
+
+  utilisateur  Utilisateur   @relation(fields: [utilisateurId], references: [id], onDelete: Cascade)
+  emprunts     Emprunt[]
+  reservations Reservation[]
+
+  @@map("adherents")
+}
+
+model Ouvrage {
+  id        String   @id @default(uuid())
+  titre     String
+  auteur    String
+  isbn      String   @unique
+  editeur   String?
+  categorie String
+  resume    String?
+  createdAt DateTime @default(now())
+
+  exemplaires  Exemplaire[]
+  reservations Reservation[]
+
+  @@map("ouvrages")
+}
+
+model Exemplaire {
+  id         String           @id @default(uuid())
+  ouvrageId  String
+  codeBarres String           @unique
+  statut     StatutExemplaire @default(DISPONIBLE)
+
+  ouvrage  Ouvrage   @relation(fields: [ouvrageId], references: [id], onDelete: Cascade)
+  emprunts Emprunt[]
+
+  @@map("exemplaires")
+}
+
+model Emprunt {
+  id                  String    @id @default(uuid())
+  exemplaireId        String
+  adherentId          String
+  dateEmprunt         DateTime  @default(now())
+  dateRetourPrevue    DateTime
+  dateRetourEffective DateTime?
+  prolongations       Int       @default(0)
+
+  exemplaire Exemplaire @relation(fields: [exemplaireId], references: [id])
+  adherent   Adherent   @relation(fields: [adherentId], references: [id])
+  penalite   Penalite?
+
+  @@map("emprunts")
+}
+
+model Reservation {
+  id              String            @id @default(uuid())
+  ouvrageId       String
+  adherentId      String
+  dateReservation DateTime          @default(now())
+  statut          StatutReservation @default(EN_ATTENTE)
+
+  ouvrage  Ouvrage  @relation(fields: [ouvrageId], references: [id])
+  adherent Adherent @relation(fields: [adherentId], references: [id])
+
+  @@map("reservations")
+}
+
+model Penalite {
+  id             String         @id @default(uuid())
+  empruntId      String         @unique
+  montant        Decimal        @db.Decimal(6, 2)
+  statutPaiement StatutPaiement @default(IMPAYEE)
+  createdAt      DateTime       @default(now())
+
+  emprunt Emprunt @relation(fields: [empruntId], references: [id], onDelete: Cascade)
+
+  @@map("penalites")
+}

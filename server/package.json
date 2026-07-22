@@ -1,0 +1,31 @@
+{
+  "name": "exlibris-server",
+  "version": "1.0.0",
+  "type": "module",
+  "description": "API de gestion de bibliothèque universitaire — Ex Libris",
+  "main": "src/index.js",
+  "scripts": {
+    "dev": "node --watch src/index.js",
+    "start": "node src/index.js",
+    "db:migrate": "node src/db/migrate.js",
+    "db:seed": "node src/db/seed.js",
+    "test": "cross-env DATABASE_URL=postgresql://postgres:postgres@localhost:5432/exlibris_test?schema=public JWT_SECRET=test_secret PENALITE_PAR_JOUR=0.50 NODE_OPTIONS=--experimental-vm-modules jest --runInBand"
+  },
+  "dependencies": {
+    "bcryptjs": "^2.4.3",
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.5",
+    "exceljs": "^4.4.0",
+    "express": "^4.21.0",
+    "jsonwebtoken": "^9.0.2",
+    "nodemailer": "^9.0.3",
+    "pdfkit": "^0.19.1",
+    "pg": "^8.13.0",
+    "zod": "^3.23.8"
+  },
+  "devDependencies": {
+    "cross-env": "^10.1.0",
+    "jest": "^30.4.2",
+    "supertest": "^7.2.2"
+  }
+}
